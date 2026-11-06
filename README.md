@@ -47,10 +47,10 @@ make clean
 | `POST` | `/be/api/vouchers/{code}/claim` | Claim voucher under pessimistic lock | Public |
 | `GET` | `/be/api/vouchers/{code}/claims/{claimCode}` | Get claim status (CLAIMED -> ISSUED) | Public |
 | `POST` | `/be/api/vouchers/{code}/init?stock=50` | Reset / reseed voucher stock | Public |
-| `POST` | `/be/api/admin/batch/reconciliation` | Trigger Jakarta Batch chunk reconciliation | Basic Auth (`ADMIN`) |
-| `GET` | `/be/api/admin/batch/reconciliation/{id}` | Check batch execution status | Basic Auth (`ADMIN`) |
-| `GET` | `/be/api/admin/batch/records` | Query persisted batch clearing records | Basic Auth (`ADMIN`) |
-| `GET` | `/be/api/admin/audit-logs` | Query distributed audit trail | Basic Auth (`ADMIN`) |
+| `POST` | `/be/api/batch/reconciliation` | Trigger Jakarta Batch chunk reconciliation | Public |
+| `GET` | `/be/api/batch/reconciliation/{id}` | Check batch execution status | Public |
+| `GET` | `/be/api/batch/records` | Query persisted batch clearing records | Public |
+| `GET` | `/be/api/audit-logs` | Query distributed audit trail | Public |
 
 ## Enterprise Features Verified
 - **Concurrency & Locking**: JPA `PESSIMISTIC_WRITE` (`SELECT ... FOR UPDATE`) prevents overselling under heavy parallel load.
