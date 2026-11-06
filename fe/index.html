@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jakarta EE Flash-Voucher &amp; Clearing Console</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="deck-container">
+    
+    <!-- Top System Navigation Bar -->
+    <header class="deck-header">
+      <div class="header-left">
+        <div class="system-badge">
+          <svg class="sys-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          <div class="system-meta">
+            <span class="system-title">FLASH-VOUCHER CONSOLE</span>
+            <span class="system-subtitle">Jakarta EE 10 • Container-Managed JTA • ActiveMQ Artemis MDB • Batch Chunk</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="server-status-pill" id="backend-status-pill">
+          <span class="status-indicator live" id="backend-status-dot"></span>
+          <span class="status-text" id="backend-status-text">Connected</span>
+        </div>
+        <button id="toggle-settings-btn" class="icon-btn" title="API Configuration" aria-label="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Collapsible Settings Drawer -->
+    <div id="settings-panel" class="settings-drawer hidden">
+      <div class="settings-inner">
+        <label for="api-base-input" class="field-label">REST API Base Endpoint</label>
+        <div class="input-action-row">
+          <input type="text" id="api-base-input" class="text-input font-mono" value="http://localhost:8080/be/api">
+          <button id="save-api-base-btn" class="btn btn-secondary">Save</button>
+          <button id="reset-api-base-btn" class="btn btn-ghost">Reset Default</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero Stock & Telemetry Control Deck -->
+    <section class="panel hero-panel">
+      <div class="panel-header">
+        <div class="panel-label">
+          <span class="panel-eyebrow">INVENTORY TELEMETRY</span>
+          <h2 class="panel-heading">Voucher Stock &amp; Pessimistic Lock Engine</h2>
+        </div>
+        <div class="panel-actions">
+          <div class="live-tag">
+            <span class="dot-pulse"></span>
+            <span>AUTO-SYNC (5s)</span>
+          </div>
+          <button id="refresh-stock-btn" class="btn btn-ghost btn-sm" title="Refresh Inventory">
+            <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            Refresh
+          </button>
+          <button id="reset-stock-btn" class="btn btn-secondary btn-sm" title="Khôi phục kho về 50 vé và dọn sạch dữ liệu cũ">
+            <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+              <path d="M21 3v5h-5"></path>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+              <path d="M8 16H3v5"></path>
+            </svg>
+            <span>Reset Kho (50)</span>
+            <span class="spinner spinner-sm hidden" id="reset-spinner"></span>
+          </button>
+          <button id="btn-autofire" class="btn btn-accent btn-sm" title="Bắn đồng thời 30 requests để biểu diễn Race Condition">
+            <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span>⚡ Bắn Tải Tranh Chấp (30 Reqs)</span>
+            <span class="spinner spinner-sm hidden" id="autofire-spinner"></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="inventory-display-grid">
+        <div class="inventory-card">
+          <span class="inv-label">TARGET VOUCHER</span>
+          <span class="inv-value font-mono accent" id="voucher-code-display">FLASH50</span>
+          <span class="inv-sub">Campaign ID</span>
+        </div>
+        <div class="inventory-card">
+          <span class="inv-label">INITIAL QUOTA</span>
+          <span class="inv-value font-mono" id="voucher-total-display">--</span>
+          <span class="inv-sub">Total Units</span>
+        </div>
+        <div class="inventory-card highlight">
+          <span class="inv-label">AVAILABLE UNITS</span>
+          <span class="inv-value font-mono success" id="voucher-available-display">--</span>
+          <span class="inv-sub" id="stock-percentage-label">--% In Stock</span>
+        </div>
+        <div class="inventory-card">
+          <span class="inv-label">ISOLATION LOCK</span>
+          <span class="inv-value-pill">PESSIMISTIC_WRITE</span>
+          <span class="inv-sub">Row-level SELECT FOR UPDATE</span>
+        </div>
+      </div>
+
+      <!-- Capacity Meter Bar -->
+      <div class="capacity-meter">
+        <div class="meter-track">
+          <div class="meter-fill" id="stock-progress-bar" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <!-- Live Concurrency Results Deck -->
+      <div id="autofire-results-panel" class="concurrency-banner hidden">
+        <div class="banner-top">
+          <div class="banner-title">
+            <span class="indicator-bullet"></span>
+            <strong>Kết Quả Bắn Tải Tranh Chấp (Race Condition Test)</strong>
+          </div>
+          <button type="button" id="btn-close-autofire" class="btn-dismiss" title="Đóng">&times;</button>
+        </div>
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <span class="m-val font-mono" id="autofire-total">0</span>
+            <span class="m-lbl">Tổng Requests</span>
+          </div>
+          <div class="metric-item success">
+            <span class="m-val font-mono" id="autofire-success">0</span>
+            <span class="m-lbl">Thành Công (202 Accepted)</span>
+          </div>
+          <div class="metric-item error">
+            <span class="m-val font-mono" id="autofire-rejected">0</span>
+            <span class="m-lbl">Bị Chặn / Hết Kho (409)</span>
+          </div>
+          <div class="metric-item">
+            <span class="m-val font-mono" id="autofire-duration">0 ms</span>
+            <span class="m-lbl">Thời Gian Chạy</span>
+          </div>
+        </div>
+        <div class="capacity-meter" style="margin: 0.25rem 0;">
+          <div class="meter-track">
+            <div class="meter-fill" id="autofire-progress-fill" style="width: 0%; background: linear-gradient(90deg, #38bdf8 0%, #10b981 100%);"></div>
+          </div>
+        </div>
+        <div class="banner-bottom">
+          <span class="audit-note" id="autofire-status-note">Đang thực thi...</span>
+          <span class="status-chip" id="autofire-stock-badge">Tồn kho hiện tại: --</span>
+        </div>
+      </div>
+
+      <div id="stock-error-box" class="callout callout-error hidden"></div>
+      <div id="reset-feedback" class="callout callout-success hidden"></div>
+    </section>
+
+    <!-- Main Operational Split Deck (Màn 2 & Màn 3 vs Màn 4) -->
+    <div class="operations-grid">
+      
+      <!-- Panel Left: Claim & Transaction Isolation (Màn 2 & Màn 3) -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-label">
+            <span class="panel-eyebrow">TRANSACTION SCOPE</span>
+            <h3 class="panel-heading">Claim Voucher &amp; Async Fulfillment</h3>
+          </div>
+          <span class="tech-tag">JTA + MDB</span>
+        </div>
+
+        <form id="claim-form" class="claim-form">
+          <div class="field-group">
+            <label for="user-id-input" class="field-label">User Identifier (unique constraint enforced)</label>
+            <div class="input-action-row">
+              <input type="text" id="user-id-input" class="text-input font-mono" placeholder="e.g. user_101" required autocomplete="off">
+              <button type="button" id="btn-generate-user" class="btn btn-secondary" title="Generate random unique user ID">
+                Random User
+              </button>
+            </div>
+          </div>
+
+          <div class="field-group fraud-toggle-wrap">
+            <label class="toggle-container" for="simulate-fraud-checkbox">
+              <input type="checkbox" id="simulate-fraud-checkbox">
+              <span class="toggle-switch"></span>
+              <div class="toggle-meta">
+                <span class="toggle-heading">Simulate Fraud (Rollback Verification)</span>
+                <span class="toggle-sub">Gây ra Exception; JTA rollback toàn bộ kho vé &amp; abort tin nhắn JMS.</span>
+              </div>
+            </label>
+          </div>
+
+          <button type="submit" id="btn-claim-voucher" class="btn btn-primary btn-block">
+            <span class="btn-text">Claim Voucher</span>
+            <span class="spinner hidden" id="claim-spinner"></span>
+          </button>
+        </form>
+
+        <!-- Live Response Banner -->
+        <div id="claim-result-box" class="response-deck hidden">
+          <div class="response-header">
+            <span id="claim-status-badge" class="badge">STATUS</span>
+            <span id="claim-http-code" class="http-tag font-mono">HTTP 202</span>
+          </div>
+          <div class="response-body">
+            <div class="response-row">
+              <span class="r-label">Response:</span>
+              <span class="r-val" id="claim-result-message">--</span>
+            </div>
+            <div class="response-row" id="claim-code-row">
+              <span class="r-label">Claim Code:</span>
+              <span class="r-val font-mono highlight" id="claim-result-code">--</span>
+            </div>
+            <div class="response-row">
+              <span class="r-label">Trace ID:</span>
+              <span class="r-val font-mono" id="claim-result-trace">--</span>
+            </div>
+          </div>
+
+          <!-- MDB Asynchronous Lifecycle Pipeline -->
+          <div id="status-tracker-box" class="pipeline-tracker hidden">
+            <div class="pipeline-header">
+              <span class="pipeline-title">MDB Asynchronous Lifecycle</span>
+              <span class="spinner spinner-sm" id="polling-spinner"></span>
+            </div>
+            <div class="pipeline-steps">
+              <div class="pipe-node active" id="step-claimed">
+                <span class="node-dot">1</span>
+                <span class="node-label">CLAIMED (202)</span>
+              </div>
+              <div class="pipe-connector" id="step-line"></div>
+              <div class="pipe-node" id="step-issued">
+                <span class="node-dot" id="step-issued-circle">2</span>
+                <span class="node-label" id="step-issued-label">ISSUED (ActiveMQ MDB)</span>
+              </div>
+            </div>
+            <div class="pipeline-footer" id="tracker-status-text">
+              Waiting for consumer processing...
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel Right: Batch Clearing & Ledger (Màn 4) -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-label">
+            <span class="panel-eyebrow">CLEARING LEDGER</span>
+            <h3 class="panel-heading">Jakarta Batch Reconciliation</h3>
+          </div>
+          <span class="tech-tag tag-accent">Chunk (20 Claims / Commit)</span>
+        </div>
+
+        <div class="batch-action-bar">
+          <p class="section-desc">Kích hoạt tiến trình Jakarta Batch đọc danh sách Claim từ database, gom nhóm chunk 20 bản ghi, tính tổng tiền và đối soát sang sổ cái tập trung.</p>
+          <div class="batch-btn-group">
+            <button id="btn-trigger-batch" class="btn btn-warning btn-sm">
+              <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span class="btn-text">Execute Batch Job</span>
+              <span class="spinner hidden" id="batch-spinner"></span>
+            </button>
+            <button id="btn-refresh-batch" class="btn btn-ghost btn-sm" title="Làm mới sổ cái đối soát">
+              <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              <span>Refresh Records</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="batch-alert" class="callout hidden"></div>
+
+        <!-- Execution Status Pill -->
+        <div id="batch-execution-card" class="batch-status-chip hidden">
+          <span>Job ID: <strong class="font-mono" id="batch-exec-id">--</strong></span>
+          <span>Status: <span id="batch-exec-status" class="badge badge-info">--</span></span>
+        </div>
+
+        <!-- Clearing Records Ledger -->
+        <div class="ledger-table-wrap">
+          <table class="ledger-table" id="batch-records-table">
+            <thead>
+              <tr>
+                <th>Job Execution</th>
+                <th>Settlement Date</th>
+                <th>Units Cleared</th>
+                <th>Cleared Amount</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="batch-records-body">
+              <tr>
+                <td colspan="5" class="empty-cell">Chưa có bản ghi đối soát nào được tạo.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- Bottom Deck: Distributed Trace & Audit Ledger -->
+    <section class="panel audit-panel">
+      <div class="panel-header">
+        <div class="panel-label">
+          <span class="panel-eyebrow">OBSERVABILITY &amp; TRACING</span>
+          <h3 class="panel-heading">CDI Distributed Audit Trail (@AroundInvoke)</h3>
+        </div>
+        <button id="btn-refresh-audit" class="btn btn-ghost btn-sm">
+          <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          Refresh Trail
+        </button>
+      </div>
+
+      <div class="ledger-table-wrap audit-scroll-wrap">
+        <table class="ledger-table" id="audit-table">
+          <thead>
+            <tr>
+              <th style="width: 180px;">Timestamp</th>
+              <th>Action / Method</th>
+              <th style="width: 120px;">Principal</th>
+              <th style="width: 120px;">Execution Time</th>
+              <th>Distributed Trace ID</th>
+            </tr>
+          </thead>
+          <tbody id="audit-logs-body">
+            <tr>
+              <td colspan="5" class="empty-cell">Đang tải nhật ký kiểm toán...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: docker.io/library/postgres:16-alpine
+    container_name: voucher-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: voucherdb
+      POSTGRES_USER: voucheruser
+      POSTGRES_PASSWORD: voucherpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U voucheruser -d voucherdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  artemis:
+    image: docker.io/apache/activemq-artemis:latest
+    container_name: voucher-artemis
+    restart: unless-stopped
+    environment:
+      ARTEMIS_USER: artemis
+      ARTEMIS_PASSWORD: artemis
+      EXTRA_ARGS: --http-host 0.0.0.0 --relax-jolokia
+    ports:
+      - "61616:61616"
+      - "8161:8161"
+    volumes:
+      - artemis_data:/var/lib/artemis-instance
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 61616 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pg_data:
+  artemis_data:

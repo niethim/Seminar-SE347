@@ -1,0 +1,32 @@
+# Build output
+target/
+**/target/
+*.war
+*.ear
+*.jar
+*.class
+
+# IDE & Editor files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+
+# Environment & Credentials
+.env

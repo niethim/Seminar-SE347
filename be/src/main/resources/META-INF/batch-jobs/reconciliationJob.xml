@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<job id="reconciliationJob" xmlns="https://jakarta.ee/xml/ns/jakartaee" version="2.0">
+    <step id="reconcileStep">
+        <chunk item-count="10">
+            <reader ref="voucherItemReader"/>
+            <processor ref="voucherItemProcessor"/>
+            <writer ref="voucherItemWriter"/>
+        </chunk>
+    </step>
+</job>

@@ -1,0 +1,17 @@
+# WildFly Configuration CLI Script for Flash-Voucher Demo
+
+# 1. Register PostgreSQL JDBC Driver if not already present
+if (outcome != success) of /subsystem=datasources/jdbc-driver=postgresql:read-resource
+    /subsystem=datasources/jdbc-driver=postgresql:add(driver-name=postgresql,driver-module-name=org.postgresql,driver-class-name=org.postgresql.Driver)
+end-if
+
+# 2. Register VoucherDS Datasource if not already present
+if (outcome != success) of /subsystem=datasources/data-source=VoucherDS:read-resource
+    /subsystem=datasources/data-source=VoucherDS:add(jndi-name="java:jboss/datasources/VoucherDS",driver-name=postgresql,connection-url="jdbc:postgresql://localhost:5432/voucherdb",user-name=voucheruser,password=voucherpass,min-pool-size=10,max-pool-size=100)
+    /subsystem=datasources/data-source=VoucherDS:enable()
+end-if
+
+# 3. Register JMS Queue VoucherIssuanceQueue if not already present
+if (outcome != success) of /subsystem=messaging-activemq/server=default/jms-queue=VoucherIssuanceQueue:read-resource
+    /subsystem=messaging-activemq/server=default/jms-queue=VoucherIssuanceQueue:add(entries=["java:/jms/queue/VoucherIssuanceQueue","java:jboss/exported/jms/queue/VoucherIssuanceQueue"])
+end-if
